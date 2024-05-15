@@ -34,12 +34,13 @@ function convertToFlag(countryCode) {
 
 class App extends React.Component {
   state = {
-    location: "Lisbon",
+    location: "",
     isLoading: false,
     weather: {},
     displayLocation: "",
   };
   fetchWeather = async () => {
+    if (this.state.location < 2) return this.setState({ weather: {} });
     try {
       this.setState({ isLoading: true });
       // 1) Getting location (geocoding)
@@ -47,7 +48,6 @@ class App extends React.Component {
         `https://geocoding-api.open-meteo.com/v1/search?name=${this.state.location}`
       );
       const geoData = await geoRes.json();
-      console.log(geoData);
 
       if (!geoData.results) throw new Error("Location not found");
 
@@ -63,8 +63,6 @@ class App extends React.Component {
       );
       const weatherData = await weatherRes.json();
       this.setState({ weather: weatherData.daily });
-
-      console.log(weatherData.daily);
     } catch (err) {
       console.error(err);
     } finally {
@@ -74,6 +72,20 @@ class App extends React.Component {
 
   setLocation = (e) => this.setState({ location: e.target.value });
 
+  componentDidMount() {
+    this.fetchWeather();
+
+    this.setState({ location: localStorage.getItem("location") || "" });
+  }
+
+  componentDidUpdate(preProp, preState) {
+    if (this.state.location !== preState.location) {
+      this.fetchWeather();
+
+      localStorage.setItem("location", this.state.location);
+    }
+  }
+
   render() {
     return (
       <div className="app">
@@ -82,7 +94,6 @@ class App extends React.Component {
           location={this.state.location}
           onChangeLocation={this.setLocation}
         />
-        <button onClick={this.fetchWeather}>GET LOCATION</button>
 
         {this.state.isLoading && <p className="loader">Loading...</p>}
         {this.state.weather.weathercode && (
