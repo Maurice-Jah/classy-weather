@@ -46,6 +46,8 @@ class App extends React.Component {
       );
       const weatherData = await weatherRes.json();
       this.setState({ weather: weatherData.daily });
+
+      console.log(weatherData.daily);
     } catch (err) {
       console.error(err);
     } finally {
@@ -76,7 +78,57 @@ class App extends React.Component {
         <button onClick={this.fetchWeather}>GET LOCATION</button>
 
         {this.state.isLoading && <p className="loader">Loading...</p>}
+
+        {this.state.weather.weathercode && (
+          <Weather
+            weather={this.state.weather}
+            location={this.state.displayLocation}
+          />
+        )}
       </div>
+    );
+  }
+}
+
+class Weather extends React.Component {
+  render() {
+    const {
+      temperature_2m_max: max,
+      temperature_2m_min: min,
+      time: dates,
+      weathercode: codes,
+    } = this.props.weather;
+
+    return (
+      <div>
+        <h2> Weather {this.props.location} </h2>
+        <ul className="weather">
+          {dates.map((date, i) => (
+            <Day
+              date={date}
+              max={max.at(i)}
+              min={min.at(i)}
+              code={codes.at(i)}
+              key={date}
+            />
+          ))}
+        </ul>
+      </div>
+    );
+  }
+}
+
+class Day extends React.Component {
+  render() {
+    const { date, max, min, code } = this.props;
+    return (
+      <li className="day">
+        <span>{code}</span>
+        <p>{date}</p>
+        <p>
+          {Math.floor(min)}&deg; &mdash; {Math.ceil(max)}&deg;
+        </p>
+      </li>
     );
   }
 }
